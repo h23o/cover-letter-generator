@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cover Letter Generator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <form id="upload-form" enctype="multipart/form-data">
+      <h1>Generate Your Cover Letter</h1>
+
+      <!-- Job Description Text Area -->
+      <label>Enter Job Description:</label>
+      <textarea id="job-description" name="job_description" rows="6" required></textarea>
+
+      <!-- CV File Upload -->
+      <label>Upload CV:</label>
+      <input type="file" id="cv" name="cv" required>
+      
+      <button type="submit">Generate</button>
+    </form>
+
+    <!-- Result container for download links -->
+    <div id="result" class="result-container">
+      <div id="loading" style="display: none;">
+        <p>Generating your cover letter...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+document.getElementById("upload-form").onsubmit = async (e) => {
+  e.preventDefault();
+
+  const resultDiv = document.getElementById("result");
+
+  // Show the "Loading..." message
+  resultDiv.innerHTML = "<p>Loading...</p>";
+
+  const formData = new FormData();
+  formData.append("job_description", document.getElementById("job-description").value);
+  formData.append("cv", document.getElementById("cv").files[0]);
+
+  try {
+    const response = await fetch("/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Replace "Loading..." with the results
+      resultDiv.innerHTML = `
+        <p>Cover letter generated successfully!</p>
+        <a href="${data.pdf_url}" class="btn-download" download="cover_letter.pdf">Download PDF</a>
+        <a href="${data.docx_url}" class="btn-download" download="cover_letter.docx">Download DOCX</a>
+      `;
+    } else {
+      resultDiv.innerHTML = ""; // Clear the loading message
+      alert("Error: " + (data.error || "Unknown error occurred"));
+    }
+  } catch (error) {
+    resultDiv.innerHTML = ""; // Clear the loading message
+    alert("An error occurred. Please try again later.");
+  }
+};
+
+  </script>
+</body>
+</html>
